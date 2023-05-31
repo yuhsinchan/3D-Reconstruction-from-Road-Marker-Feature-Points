@@ -50,7 +50,12 @@ class Camera:
 
         self.extrinsic_matrix = np.identity(4)
 
-    def calculte_extrinsic_matrix(self, x, y, z, qx, qy, qz, qw):
+    def calaulate_extrinsic_matrix(self, *args):
+        for matrix in args:
+            self.extrinsic_matrix = np.matmul(self.extrinsic_matrix, matrix)
+    
+    @staticmethod
+    def get_extrinsic_matrix(x, y, z, qx, qy, qz, qw) -> np.ndarray:
         R = np.array(
             [
                 [
@@ -78,17 +83,42 @@ class Camera:
         transformation_matrix[:3, :3] = R
         transformation_matrix[:3, 3] = T.reshape(3)
 
-        self.extrinsic_matrix = transformation_matrix @ self.extrinsic_matrix
+        return transformation_matrix
 
+class Cameras:
+    def __init__(self):
+        self.back = Camera("gige_100_b_hdr")
+        self.front = Camera("gige_100_f_hdr")
+        self.front_left = Camera("gige_100_fl_hdr")
+        self.front_right = Camera("gige_100_fr_hdr")
+        
+        base_link_f = Camera.get_extrinsic_matrix(
+            0.0, 0.0, 0.0, -0.5070558775462676, 0.47615311808704197, 
+            -0.4812773544166568, 0.5334272708696808
+        )
+        f_fr = Camera.get_extrinsic_matrix(
+            0.559084, 0.0287952, -0.0950537, -0.0806252, 0.607127, 
+            0.0356452, 0.789699
+        )
+        f_fl = Camera.get_extrinsic_matrix(
+            -0.564697, 0.0402756, -0.028059, -0.117199, -0.575476,
+            -0.0686302, 0.806462
+        )
+        fl_b = Camera.get_extrinsic_matrix(
+            0.06742502153707941, 1.723731468585929, 1.886103532139902,
+            0.5070558775462676, -0.47615311808704197, 0.4812773544166568,
+            0.5334272708696808
+        )
+        
+        # update camera extrinsic matrix
+        self.back.calaulate_extrinsic_matrix(base_link_f, f_fl, fl_b)
+        self.front.calaulate_extrinsic_matrix(base_link_f)
+        self.front_left.calaulate_extrinsic_matrix(base_link_f, f_fl)
+        self.front_right.calaulate_extrinsic_matrix(base_link_f, f_fr)
 
 if __name__ == "__main__":
-    camera = Camera("gige_100_fl_hdr")
-    console.print("camera_matrix\n", camera.intrinsic_matrix)
-    console.print("projection_matrix\n", camera.projection_matrix)
-    console.print("distortion_coefficients\n", camera.distortion_coefficients)
-    console.print("rectification_matrix\n", camera.rectification_matrix)
-    console.print("width:", camera.width)
-    console.print("height:", camera.height)
-    console.print("camera_name:", camera.camera_name)
-    console.print("distortion_model:", camera.distortion_model)
-    console.print("mask", camera.mask.shape)
+    cameras = Cameras()
+    console.print("back\n", cameras.back.extrinsic_matrix)
+    console.print("front\n", cameras.front.extrinsic_matrix)
+    console.print("front_left\n", cameras.front_left.extrinsic_matrix)
+    console.print("front_right\n", cameras.front_right.extrinsic_matrix)
