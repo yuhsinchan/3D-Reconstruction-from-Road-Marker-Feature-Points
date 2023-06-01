@@ -1,53 +1,42 @@
 import cv2
 import pandas as pd
 import numpy as np
+import os
+from typing import Union
 
 
-def get_corners(image: np.ndarray, detect_bounding_box: pd.DataFrame) -> np.ndarray:
+def get_corners(
+    seg_img=None, seq: str = "", frame: str = ""
+) -> Union[np.ndarray, None]:
     """get corners from image and detect bounding box
 
     Args:
-        image (np.ndarray): raw image
-
-        detect_bounding_box (pd.DataFrame): detected bounding boxes from yolo
+        seg_img (np.ndarray): segmented image
+        seq (str): sequence name
+        frame (str): frame name
     Returns:
-        np.ndarray: corner points
+        np.ndarray: corner points, shape: (n, 2)
     """
-    corners = []
 
-    for i, row in detect_bounding_box.iterrows():
-        x1, y1, x2, y2, class_id, probability = row
-
-        # bound x1, y1, x2, y2
-        x1 = max(0, x1)
-        x2 = min(image.shape[1], x2)
-        y1 = max(0, y1)
-        y2 = min(image.shape[0], y2)
-
-        # crop image and convert to grayscale
-        im = image[int(y1) : int(y2), int(x1) : int(x2)]
-
-        imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-
-        # do edge detection
-        edges = cv2.Canny(imgray, 50, 150, apertureSize=3)
-
-        # turn the edge image into a binary image
-        ret, thresh = cv2.threshold(edges, 127, 255, 0)
-
-        # find the contour of the edge image
-        contours, hierarchy = cv2.findContours(
-            thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+    if seg_img is None:
+        frame_path = os.path.join(
+            os.environ["root_path"], "ITRI_dataset", seq, "dataset", frame
         )
+        seg_img = cv2.imread(os.path.join(frame_path, "seg.jpg"), cv2.IMREAD_GRAYSCALE)
 
-        # filter out the contour that has a small area
-        contours = [contour for contour in contours if cv2.contourArea(contour) > 1]
+    corners = None
 
-        # find corners
-        for i, contour in enumerate(contours):
-            epsilon = 0.5 * cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, epsilon, True)
-            approx = approx.reshape(-1, 2) + np.array([x1, y1])
-            corners.append(approx)
+    contours, hierarchy = cv2.findContours(
+        seg_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+    )
 
-    return np.array(corners).astype(np.int8)
+    for i, contour in enumerate(contours):
+        epsilon = 0.005 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        if corners is None:
+            corners = approx.reshape(-1, 2)
+        else:
+            corners = np.concatenate((corners, approx.reshape(-1, 2)), axis=0)
+
+    return corners
