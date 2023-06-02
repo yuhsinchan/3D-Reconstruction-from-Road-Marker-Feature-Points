@@ -108,7 +108,7 @@ class Cameras:
             0.06742502153707941, 1.723731468585929, 1.886103532139902,
             0.5070558775462676, -0.47615311808704197, 0.4812773544166568,
             0.5334272708696808
-        )
+        )        
         
         # update camera extrinsic matrix
         self.back.calaulate_extrinsic_matrix(base_link_f, f_fl, fl_b)
