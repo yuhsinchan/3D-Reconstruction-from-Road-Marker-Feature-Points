@@ -35,7 +35,7 @@ if __name__ == "__main__":
         target = csv_reader(os.path.join(path_name, "sub_map.csv"))
         target_pcd = numpy2pcd(target)
 
-        source = csv_reader(os.path.join(path_name, "pc.csv"))
+        source = csv_reader(os.path.join(path_name, "test_map.csv"))
 
         if len(source.shape) == 0:
             source = np.array([[0, 0, 0]])

@@ -82,7 +82,6 @@ class Camera:
         transformation_matrix = np.identity(4)
         transformation_matrix[:3, :3] = R
         transformation_matrix[:3, 3] = T.reshape(3)
-
         return transformation_matrix
 
 class Cameras:
@@ -93,21 +92,16 @@ class Cameras:
         self.front_right = Camera("gige_100_fr_hdr")
         
         base_link_f = Camera.get_extrinsic_matrix(
-            0.0, 0.0, 0.0, -0.5070558775462676, 0.47615311808704197, 
-            -0.4812773544166568, 0.5334272708696808
+            0.0, 0.0, 0.0, -0.5070558775462676, 0.47615311808704197, -0.4812773544166568, 0.5334272708696808
         )
         f_fr = Camera.get_extrinsic_matrix(
-            0.559084, 0.0287952, -0.0950537, -0.0806252, 0.607127, 
-            0.0356452, 0.789699
+            0.559084, 0.0287952, -0.0950537, -0.0806252, 0.607127, 0.0356452, 0.789699
         )
         f_fl = Camera.get_extrinsic_matrix(
-            -0.564697, 0.0402756, -0.028059, -0.117199, -0.575476,
-            -0.0686302, 0.806462
+            -0.564697, 0.0402756, -0.028059, -0.117199, -0.575476, -0.0686302, 0.806462
         )
         fl_b = Camera.get_extrinsic_matrix(
-            0.06742502153707941, 1.723731468585929, 1.886103532139902,
-            0.5070558775462676, -0.47615311808704197, 0.4812773544166568,
-            0.5334272708696808
+            -1.2446, 0.21365, -0.91917, 0.074732, -0.794, -0.10595, 0.59393
         )        
         
         # update camera extrinsic matrix
@@ -122,3 +116,8 @@ if __name__ == "__main__":
     console.print("front\n", cameras.front.extrinsic_matrix)
     console.print("front_left\n", cameras.front_left.extrinsic_matrix)
     console.print("front_right\n", cameras.front_right.extrinsic_matrix)
+
+    console.print("back\n", cameras.back.projection_matrix)
+    console.print("front\n", cameras.front.projection_matrix)
+    console.print("front_left\n", cameras.front_left.projection_matrix)
+    console.print("front_right\n", cameras.front_right.projection_matrix)

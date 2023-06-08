@@ -1,6 +1,8 @@
 import os, sys, argparse
 import numpy as np
+import argparse
 
+sys.path.append(os.environ["root_path"])
 
 def calculate_dist(label, pred):
     assert (
@@ -22,6 +24,18 @@ def benchmark(dataset_path, sequences):
 
 
 if __name__ == "__main__":
-    dataset_path = "/home/chenyukai/ITRI/TA_version"
-    sequences = ["seq1", "seq2", "seq3"]
-    benchmark(dataset_path, sequences)
+    # dataset_path = "/home/chenyukai/ITRI/TA_version"
+    # sequences = ["seq1", "seq2", "seq3"]
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-s", "--seq", type=str, help="seq1, seq2 or seq3", default="seq1"
+    )
+
+    args = parser.parse_args()
+
+    dataset_path = os.path.join(
+        os.environ["root_path"], "ITRI_DLC"
+    )
+
+    benchmark(dataset_path, args.seq)
