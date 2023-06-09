@@ -11,13 +11,16 @@ if __name__ == "__main__":
         "-s", "--seq", type=str, help="seq1, seq2 or seq3", default=None
     )
     parser.add_argument("-t", "--test", type=str, help="test1, test2", default=None)
+    parser.add_argument("--threashold", type=float, help="threashold", default=0.02)
 
     args = parser.parse_args()
 
     if args.seq is not None:
         path = os.path.join(root_path, "ITRI_dataset", args.seq)
+        output_path = os.path.join(root_path, "ITRI_DLC", args.seq)
     elif args.test is not None:
         path = os.path.join(root_path, "ITRI_DLC", args.test)
+        output_path = path
     else:
         raise ValueError("Please specify seq or test")
 
@@ -49,12 +52,12 @@ if __name__ == "__main__":
 
         # Implement ICP
         transformation = ICP(
-            source_pcd, target_pcd, threshold=0.02, init_pose=init_pose, iteration=1
+            source_pcd, target_pcd, threshold=args.threashold, init_pose=init_pose
         )
         pred_x = transformation[0, 3]
         pred_y = transformation[1, 3]
 
         poses.append(f"{pred_x} {pred_y}")
 
-    with open(os.path.join(path, "pred_pose.txt"), "w") as f:
+    with open(os.path.join(output_path, "pred_pose.txt"), "w") as f:
         f.write("\n".join(poses))
