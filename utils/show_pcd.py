@@ -21,7 +21,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    source = csv_reader(f"{root_path}/{args.map}.csv")
+    source = csv_reader(f"{root_path}/{args.map}")
     source_pcd = numpy2pcd(source)
 
     # create a new point cloud for the origin

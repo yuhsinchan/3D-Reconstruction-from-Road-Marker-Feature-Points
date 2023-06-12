@@ -7,7 +7,8 @@ import math
 console = Console()
 cameras = Cameras()
 
-# input 
+# input
+
 
 def uv2xyz(corners_uv, camera_name):
     # corners is an array of shape (n, 2)
@@ -18,9 +19,9 @@ def uv2xyz(corners_uv, camera_name):
         return np.array([])
 
     with open(camera_name, "r") as file:
-            reader = csv.reader(file)
-            camera_name = next(reader)[0]
-            # console.log(f"camera name: {camera_name}")
+        reader = csv.reader(file)
+        camera_name = next(reader)[0]
+        # console.log(f"camera name: {camera_name}")
 
     camera_name = camera_name.split("_")[4]
     # console.log(f"camera name: {camera_name}")
@@ -48,7 +49,7 @@ def uv2xyz(corners_uv, camera_name):
     else:
         # console.log("camera name is not valid")
         return np.array([])
-    
+
     corners_xyz = []
     # convert uv to xyz
 
@@ -58,24 +59,26 @@ def uv2xyz(corners_uv, camera_name):
     cy = intrinsic_matrix[1, 2]
 
     f = math.sqrt(fx**2 + fy**2)
-    
-    for uv in corners_uv:
 
+    for uv in corners_uv:
         # use the uv and projection matrix to calculate the ray
-        uv = np.append(uv, 1)   
+        uv = np.append(uv, 1)
         line_cam = np.linalg.pinv(projection_matrix) @ uv
         direction_cam = line_cam / np.linalg.norm(line_cam)
-        
-        # transform the ground plane to the camera coordinate 
+
+        # transform the ground plane to the camera coordinate
         # (z + 1.63 = 0)
         direction_world = extrinsic_matrix @ direction_cam
         camera_position_world = extrinsic_matrix @ np.array([0, 0, 0, 1])
-        t = -1.63 / (direction_world[2]) # - camera_position_world[2])
+        t = -1.63 / (direction_world[2])  # - camera_position_world[2])
         intersection_point_world = t * direction_world + camera_position_world
-        corners_xyz.append(intersection_point_world[:3])
+
+        if (
+            intersection_point_world[0] ** 2 + intersection_point_world[1] ** 2
+            < 20**2
+        ):
+            corners_xyz.append(intersection_point_world[:3])
 
     corners_xyz = np.array(corners_xyz)
 
     return corners_xyz
-        
-

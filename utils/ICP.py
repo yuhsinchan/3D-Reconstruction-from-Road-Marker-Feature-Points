@@ -11,12 +11,17 @@ def ICP(source, target, threshold, init_pose, iteration=30):
         target,
         threshold,
         init_pose,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(),
-        o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=iteration),
+        estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+        criteria=o3d.pipelines.registration.ICPConvergenceCriteria(
+            max_iteration=iteration
+        ),
     )
     print(reg_p2p)
+    assert (
+        len(reg_p2p.correspondence_set) != 0
+    ), "The size of correspondence_set between your point cloud and sub_map should not be zero."
     print(reg_p2p.transformation)
-    return reg_p2p.transformation
+    return reg_p2p.transformation, len(reg_p2p.correspondence_set)
 
 
 def csv_reader(filename):
@@ -41,7 +46,7 @@ if __name__ == "__main__":
 
     # Source point cloud
     # TODO: Read your point cloud here#
-    source = csv_reader(f"{path_name}/[[[your file name]]]")
+    source = csv_reader(f"{path_name}/test_map.csv")
     source_pcd = numpy2pcd(source)
 
     # Initial pose

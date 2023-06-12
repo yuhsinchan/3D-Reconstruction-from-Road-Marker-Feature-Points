@@ -20,43 +20,75 @@ console = Console()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s", "--seq", type=str, help="seq1, seq2 or seq3", default="seq1"
+        "-s", "--seq", type=str, nargs="+", help="seq1, seq2 or seq3", default=None
+    )
+    parser.add_argument(
+        "-t", "--test", type=str, nargs="+", help="test1 or test2", default=None
     )
 
     args = parser.parse_args()
 
-    dataset_path = os.path.join(
-        os.environ["root_path"], "ITRI_dataset", args.seq, "dataset"
-    )
-    other_path = os.path.join(
-        os.environ["root_path"], "ITRI_dataset", args.seq, "other_data"
-    )
+    dataset_paths = []
+    other_paths = []
 
-    # console.log(f"dataset path: {dataset_path}")
-    # console.log(f"other path: {other_path}")
+    if args.test is not None:
+        for t in args.test:
+            dataset_paths.append(
+                os.path.join(os.environ["root_path"], "ITRI_DLC", t, "dataset")
+            )
+            other_paths.append(
+                os.path.join(os.environ["root_path"], "ITRI_DLC", t, "other_data")
+            )
+    if args.seq is not None:
+        for s in args.seq:
+            dataset_paths.append(
+                os.path.join(os.environ["root_path"], "ITRI_dataset", s, "dataset")
+            )
+            other_paths.append(
+                os.path.join(os.environ["root_path"], "ITRI_dataset", s, "other_data")
+            )
 
-    # read camera info
-    cameras = Cameras()
+    for dataset_path, other_path in zip(dataset_paths, other_paths):
+        console.log(f"dataset path: {dataset_path}")
+        console.log(f"other path: {other_path}")
 
-    frames = os.listdir(dataset_path)
-    # sort the subfolders based on the capture time
-    frames = sorted(frames, key=lambda x: int(x.split("_")[0]) * 10**9 + int(x.split("_")[1].ljust(9, "0")))
+        # read camera info
+        cameras = Cameras()
 
-    # write to csv
-    for f in track(frames):
-        # console.log(f"frame: {f}")
-        # read raw image
-        raw_image = cv2.imread(os.path.join(dataset_path, f, "raw_image.jpg"))
-        raw_image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2RGB)
-        # get corners
-        corners_uv = get_corners(seq=args.seq, frame=f)
-        # transform uv to xyz
-        corners_xyz = uv2xyz(corners_uv, os.path.join(dataset_path, f, "camera.csv"))
-        # console.log(corners_xyz.shape)
+        frames = os.listdir(dataset_path)
+        # sort the subfolders based on the capture time
+        frames = sorted(
+            frames,
+            key=lambda x: int(x.split("_")[0]) * 10**9
+            + int(x.split("_")[1].ljust(9, "0")),
+        )
 
-        # write corners_xyz to csv
-        with open(os.path.join(dataset_path, f, "test_map.csv"), "w") as file:
-            writer = csv.writer(file)
+        # write to csv
+        for f in track(frames):
+            # console.log(f"frame: {f}")
+            # read raw image
+            raw_image = cv2.imread(os.path.join(dataset_path, f, "raw_image.jpg"))
+            raw_image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2RGB)
+            # get corners
+            corners_uv = get_corners(seq=dataset_path.split("/")[-2], frame=f)
+            im_cp = raw_image.copy()
 
-            for point in corners_xyz:
-                writer.writerow(point)
+            if corners_uv is not None:
+                for corner in corners_uv:
+                    cv2.circle(im_cp, corner, 3, (0, 255, 0), -1)
+
+            im_cp = cv2.cvtColor(im_cp, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(os.path.join(dataset_path, f, "corners.jpg"), im_cp)
+
+            # transform uv to xyz
+            corners_xyz = uv2xyz(
+                corners_uv, os.path.join(dataset_path, f, "camera.csv")
+            )
+            # console.log(corners_xyz.shape)
+
+            # write corners_xyz to csv
+            with open(os.path.join(dataset_path, f, "test_map.csv"), "w") as file:
+                writer = csv.writer(file)
+
+                for point in corners_xyz:
+                    writer.writerow(point)

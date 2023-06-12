@@ -12,6 +12,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("-t", "--test", type=str, help="test1, test2", default=None)
     parser.add_argument("--threashold", type=float, help="threashold", default=0.02)
+    parser.add_argument("-it", "--iter", type=int, help="iteration", default=30)
 
     args = parser.parse_args()
 
@@ -29,6 +30,8 @@ if __name__ == "__main__":
 
     poses = []
 
+    correspondance = []
+
     for timestamp in track(localization_timestamps):
         timestamp = timestamp.strip()
 
@@ -38,7 +41,7 @@ if __name__ == "__main__":
         target = csv_reader(os.path.join(path_name, "sub_map.csv"))
         target_pcd = numpy2pcd(target)
 
-        source = csv_reader(os.path.join(path_name, "test_map.csv"))
+        source = csv_reader(os.path.join(path_name, "test_merge_map.csv"))
 
         if len(source.shape) == 0:
             source = np.array([[0, 0, 0]])
@@ -51,13 +54,23 @@ if __name__ == "__main__":
         init_pose = csv_reader(os.path.join(path_name, "initial_pose.csv"))
 
         # Implement ICP
-        transformation = ICP(
-            source_pcd, target_pcd, threshold=args.threashold, init_pose=init_pose
+        transformation, n_correspondance = ICP(
+            source_pcd,
+            target_pcd,
+            threshold=args.threashold,
+            init_pose=init_pose,
+            iteration=args.iter,
         )
         pred_x = transformation[0, 3]
         pred_y = transformation[1, 3]
 
         poses.append(f"{pred_x} {pred_y}")
+        correspondance.append(n_correspondance)
 
     with open(os.path.join(output_path, "pred_pose.txt"), "w") as f:
         f.write("\n".join(poses))
+
+    # calculate the average and std correspondance
+    correspondance = np.array(correspondance)
+    print(f"Average correspondance: {np.mean(correspondance)}")
+    print(f"Std correspondance: {np.std(correspondance)}")

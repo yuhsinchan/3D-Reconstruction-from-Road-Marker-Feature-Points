@@ -22,15 +22,24 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s", "--seq", type=str, help="seq1, seq2 or seq3", default="seq1"
     )
+    parser.add_argument("-t", "--test", type=str, help="test1 or test2", default=None)
 
     args = parser.parse_args()
 
-    dataset_path = os.path.join(
-        os.environ["root_path"], "ITRI_dataset", args.seq, "dataset"
-    )
-    other_path = os.path.join(
-        os.environ["root_path"], "ITRI_dataset", args.seq, "other_data"
-    )
+    if args.test is not None:
+        dataset_path = os.path.join(
+            os.environ["root_path"], "ITRI_DLC", args.test, "dataset"
+        )
+        other_path = os.path.join(
+            os.environ["root_path"], "ITRI_DLC", args.test, "other_data"
+        )
+    else:
+        dataset_path = os.path.join(
+            os.environ["root_path"], "ITRI_dataset", args.seq, "dataset"
+        )
+        other_path = os.path.join(
+            os.environ["root_path"], "ITRI_dataset", args.seq, "other_data"
+        )
 
     console.log(f"dataset path: {dataset_path}")
     console.log(f"other path: {other_path}")
@@ -38,17 +47,20 @@ if __name__ == "__main__":
     # read camera info
     cameras = Cameras()
 
-
     unsorted_frames = os.listdir(dataset_path)
 
     # sort the subfolders based on the capture time
-    sorted_frames = sorted(unsorted_frames, key=lambda x: int(x.split("_")[0]) * 10**9 + int(x.split("_")[1].ljust(9, "0")))
-
+    sorted_frames = sorted(
+        unsorted_frames,
+        key=lambda x: int(x.split("_")[0]) * 10**9
+        + int(x.split("_")[1].rjust(9, "0")),
+    )
+    print(sorted_frames[-4:])
     # I have 1576 frames in seq1
     # read 4 frames at a time
-    for num in track(range(0, len(sorted_frames), 4)):
+    for num in track(range(0, len(sorted_frames) - 4)):
         frames = sorted_frames[num : num + 4]
-        console.log(f"frames: {frames}")
+        # console.log(f"frames: {frames}")
 
         camera_names = []
         corners_xyz = []
@@ -65,23 +77,21 @@ if __name__ == "__main__":
             with open(os.path.join(dataset_path, frame, "test_map.csv"), "r") as file:
                 reader = csv.reader(file)
                 corner_xyz = np.array(list(reader), dtype=np.float32)
-                console.log(f"corner_xyz: {corner_xyz.shape}")
+                # if corner_xyz.shape[0] == 0:
+                #     console.log(frame)
+                #     console.log(f"corner_xyz: {corner_xyz.shape}")
                 corners_xyz.append(corner_xyz)
 
-        with open(os.path.join(os.environ["root_path"], "test_map.csv"), "w") as file:
+        with open(
+            os.path.join(dataset_path, frames[0], "test_merge_map.csv"), "w"
+        ) as file:
             writer = csv.writer(file)
 
             # calibrate the xyz of corners
             for i, corner_xyz in enumerate(corners_xyz):
                 for point in corner_xyz:
-                  
                     writer.writerow(point)
 
-        console.log("done")
+        # console.log("done")
 
-
-        break
-
-
-
-
+        # break
