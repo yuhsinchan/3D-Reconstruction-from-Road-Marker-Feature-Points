@@ -42,16 +42,20 @@ vis.add_geometry(pcd)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--seq", type=str, help="seq1, seq2 or seq3", default="seq1")
+    parser.add_argument(
+        "-s", "--seq", type=str, help="seq1, seq2 or seq3", default="seq1"
+    )
     args = parser.parse_args()
-    
 
-    dataset_path = os.path.join(os.environ["root_path"], "ITRI_dataset", args.seq, "dataset")
+    dataset_path = os.path.join(
+        os.environ["root_path"], "ITRI_dataset", args.seq, "dataset"
+    )
     unsorted_frames = os.listdir(dataset_path)
-    sorted_frames = sorted(unsorted_frames, key=lambda x: int(x.split("_")[0]) * 10**9 + int(x.split("_")[1].ljust(9, "0")))
+    sorted_frames = sorted(
+        unsorted_frames,
+        key=lambda x: int(x.split("_")[0]) * 10**9 + int(x.split("_")[1]),
+    )
 
-    
-    
     # I have 1576 frames in seq1
     for num in track(range(0, len(sorted_frames), 4)):
         # wait for 1 second
@@ -76,14 +80,13 @@ if __name__ == "__main__":
                 corner_xyz = np.array(list(reader), dtype=np.float32)
                 corners_xyz.append(corner_xyz)
 
-
         for i, corner_xyz in enumerate(corners_xyz):
             for point in corner_xyz:
                 points.append(point)
 
         points = np.array(points)
         # if points is empty, then skip this frame
-        if(points.size == 0):
+        if points.size == 0:
             continue
 
         pcd.points = o3d.utility.Vector3dVector(points)
@@ -95,9 +98,3 @@ if __name__ == "__main__":
         vis.update_renderer()
 
 vis.destroy_window()
-
-
-
-
-
-    

@@ -184,5 +184,5 @@ if __name__ == "__main__":
 
         console.log(f"Processing {d}...")
 
-        with WorkerPool(n_jobs=8) as pool:
+        with WorkerPool(n_jobs=4) as pool:
             pool.map(get_segment, frames, progress_bar=True)

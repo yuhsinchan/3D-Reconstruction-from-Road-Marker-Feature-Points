@@ -11,7 +11,7 @@ if __name__ == "__main__":
         "-s", "--seq", type=str, help="seq1, seq2 or seq3", default=None
     )
     parser.add_argument("-t", "--test", type=str, help="test1, test2", default=None)
-    parser.add_argument("--threashold", type=float, help="threashold", default=0.02)
+    parser.add_argument("--threshold", type=float, help="threshold", default=0.02)
     parser.add_argument("-it", "--iter", type=int, help="iteration", default=30)
 
     args = parser.parse_args()
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         transformation, n_correspondance = ICP(
             source_pcd,
             target_pcd,
-            threshold=args.threashold,
+            threshold=args.threshold,
             init_pose=init_pose,
             iteration=args.iter,
         )

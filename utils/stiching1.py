@@ -61,7 +61,6 @@ if __name__ == "__main__":
     for num in track(range(0, len(sorted_frames) - 4)):
         frames = sorted_frames[num : num + 4]
         # console.log(f"frames: {frames}")
-
         camera_names = []
         corners_xyz = []
 
